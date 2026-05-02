@@ -93,7 +93,7 @@ const injectStyles = () => {
     /* Mobile Responsive Additions */
     .mobile-topbar { display: none; padding: 14px 20px; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.07); background: rgba(3,7,15,0.92); position: sticky; top: 0; z-index: 90; backdrop-filter: blur(24px); }
     .sidebar { width: 236px; padding: 26px 14px; display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,0.07); background: rgba(3,7,15,0.92); backdrop-filter: blur(24px); height: 100vh; z-index: 100; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex-shrink: 0; }
-    .main-area { flex: 1; padding: 44px 52px; overflow-y: auto; height: 100vh; display: flex; flex-direction: column; }
+    .main-area { flex: 1; padding: 44px 52px; overflow-y: auto; overflow-x: hidden; height: 100vh; display: flex; flex-direction: column; }
     .nav-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 95; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .nav-overlay.show { display: block; opacity: 1; pointer-events: all; }
     
@@ -103,8 +103,9 @@ const injectStyles = () => {
       .sidebar.open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.8); }
       .main-area { padding: 24px 16px; height: calc(100vh - 65px); }
       
-      /* THIS RULE FORCES ALL GRIDS TO STACK ON MOBILE */
-      div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 16px !important; }
+      /* STRICT MOBILE GRID OVERRIDES */
+      .responsive-header { flex-direction: column !important; align-items: flex-start !important; gap: 20px !important; }
+      .responsive-grid { display: flex !important; flex-direction: column !important; width: 100% !important; gap: 16px !important; }
       
       .game-btn-container { flex-direction: column !important; }
       .mobile-close-btn { display: block !important; }
@@ -281,11 +282,11 @@ const AuthScreen = ({ onLogin }) => {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
               <input className="inp" placeholder="Age" type="number" value={form.age} onChange={e => set("age", e.target.value)}/>
               <input className="inp" placeholder="CIBIL Score (300–900)" type="number" value={form.cibil} onChange={e => set("cibil", e.target.value)}/>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
               <input className="inp" placeholder="Monthly Salary ₹" type="number" value={form.salary} onChange={e => set("salary", e.target.value)}/>
               <input className="inp" placeholder="Current EMIs ₹" type="number" value={form.currentEmi} onChange={e => set("currentEmi", e.target.value)}/>
             </div>
@@ -351,7 +352,7 @@ const Overview = ({ user }) => {
 
   return (
     <div className="anim-in">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32 }}>
+      <div className="responsive-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32 }}>
         <div>
           <p style={{ fontSize: 13, color: T.textSub, marginBottom: 6 }}>Good day,</p>
           <h1 style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.15 }}>{user.name.split(" ")[0]}</h1>
@@ -370,7 +371,7 @@ const Overview = ({ user }) => {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 22 }}>
+      <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 22 }}>
         {cards.map((c, i) => (
           <div key={i} className="panel anim-up" style={{ padding: "20px 22px", animationDelay: `${i * 0.07}s` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -385,7 +386,7 @@ const Overview = ({ user }) => {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.9fr 1fr", gap: 20, marginBottom: 20 }}>
+      <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "1.9fr 1fr", gap: 20, marginBottom: 20 }}>
         <div className="panel" style={{ padding: 26 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <div>
@@ -416,7 +417,7 @@ const Overview = ({ user }) => {
           </ResponsiveContainer>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="responsive-grid" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div className="panel" style={{ padding: 22, flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Cash Breakdown</div>
             <ResponsiveContainer width="100%" height={100}>
@@ -446,7 +447,7 @@ const Overview = ({ user }) => {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
+      <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
         {tips.map((t, i) => (
           <div key={i} className="panel anim-up" style={{ padding: 18, borderLeft: `3px solid ${tipColors[t.t]}`, animationDelay: `${0.35 + i * 0.1}s` }}>
             <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
@@ -511,7 +512,6 @@ const EMICalc = ({ params, setParams, user }) => {
 
   const pieData = [{ name: "Principal", value: Math.round(p) }, { name: "Interest", value: Math.round(totalInt) }];
 
-  // FIXED LAG: Function returns JSX directly instead of creating a nested component
   const renderSlider = ({ label, k, min, max, step, colors, prefix = "", suffix = "" }) => {
     const val = Number(params[k]) || 0;
     const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
@@ -559,7 +559,7 @@ const EMICalc = ({ params, setParams, user }) => {
 
   return (
     <div className="anim-in">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28, flexWrap: "wrap", gap: 14 }}>
+      <div className="responsive-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
         <div>
           <h2 style={{ fontSize: 28, fontWeight: 800 }}>EMI Calculator</h2>
           <p style={{ color: T.textSub, fontSize: 13, marginTop: 4 }}>EMI calculator • Amortization schedule • Prepayment analysis</p>
@@ -570,7 +570,7 @@ const EMICalc = ({ params, setParams, user }) => {
       </div>
 
       {activeTab === "basic" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 22 }}>
+        <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 22 }}>
           <div className="panel" style={{ padding: 32 }}>
             {renderSlider({ label: "Loan Amount", k: "principal", prefix: "₹", min: 10000, max: 5000000, step: 10000 })}
             {renderSlider({ label: "Interest Rate (p.a.)", k: "rate", suffix: "%", min: 5, max: 30, step: 0.1, colors: `linear-gradient(to right,${T.primary},${T.gold},${T.danger})` })}
@@ -650,7 +650,7 @@ const EMICalc = ({ params, setParams, user }) => {
       )}
 
       {activeTab === "prepay" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22 }}>
+        <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22 }}>
           <div className="panel" style={{ padding: 32 }}>
             <h3 style={{ fontWeight: 700, fontSize: 17, marginBottom: 6 }}>Prepayment Simulator</h3>
             <p style={{ fontSize: 13, color: T.textSub, marginBottom: 28, lineHeight: 1.6 }}>Pay extra each month — see how much time and interest you save.</p>
@@ -709,11 +709,11 @@ const EMICalc = ({ params, setParams, user }) => {
 
       {activeTab === "compare" && (
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+          <div className="responsive-header" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
             <h3 style={{ fontWeight: 700, fontSize: 17 }}>Tenure Comparison</h3>
             <span style={{ fontSize: 13, color: T.textSub }}>— {fmtK(p)} at {r}% p.a.</span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 24 }}>
+          <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 24 }}>
             {cmpData.map((c, i) => (
               <div key={i} onClick={() => setParams({ ...params, tenure: c.tenure })} className="panel" style={{ padding: 22, textAlign: "center", cursor: "pointer", borderColor: t === c.tenure ? T.primary : T.border }}>
                 <div style={{ fontSize: 13, color: T.textSub, marginBottom: 8 }}>{c.label}</div>
@@ -829,7 +829,7 @@ const FinancialGame = ({ user }) => {
         <p style={{ color: T.textSub, fontSize: 14, marginTop: 6 }}>Real decisions. Real consequences. One wrong move can spiral.</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+      <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
         {bars.map((b, i) => (
           <div key={i} className="panel" style={{ padding: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 9 }}>
@@ -882,7 +882,7 @@ const FinancialGame = ({ user }) => {
             <div style={{ height: "100%", width: `${((idx + 1) / scenarios.length) * 100}%`, background: `linear-gradient(to right,${T.primary},${T.blue})`, transition: "width 0.4s ease" }}/>
           </div>
           <div style={{ padding: 36 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
+            <div className="responsive-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
               <span className="tag" style={{ background: T.primaryDim, color: T.primary }}>Month {gs.month} · Scenario {idx + 1}/{scenarios.length}</span>
               <span className="tag" style={{ background: T.blueDim, color: T.blue }}>{scenarios[idx].cat}</span>
             </div>
@@ -944,7 +944,7 @@ const Markets = ({ user }) => {
 
   return (
     <div className="anim-in">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 26, flexWrap: "wrap", gap: 14 }}>
+      <div className="responsive-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 26, flexWrap: "wrap", gap: 14 }}>
         <div>
           <h2 style={{ fontSize: 28, fontWeight: 800 }}>Market Hub</h2>
           <p style={{ color: T.textSub, fontSize: 13, marginTop: 4 }}>Compare lenders · Check eligibility · Find best rates</p>
@@ -954,7 +954,7 @@ const Markets = ({ user }) => {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 22, marginBottom: 22 }}>
+      <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 22, marginBottom: 22 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {filtered.map(l => {
             const e = getElig(l);
@@ -1077,9 +1077,9 @@ Rules:
 
     try {
       // NOTE: Make sure your NEW Gemini API Key goes here!
-      const API_KEY = "YOUR_NEW_GEMINI_API_KEY_HERE"; 
+      const API_KEY = "AIzaSyBdGkZlmv7PnDg-yCPg0GWTiUk_5D3L0_c"; 
       
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
