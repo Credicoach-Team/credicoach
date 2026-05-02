@@ -96,12 +96,17 @@ const injectStyles = () => {
     .main-area { flex: 1; padding: 44px 52px; overflow-y: auto; height: 100vh; display: flex; flex-direction: column; }
     .nav-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 95; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .nav-overlay.show { display: block; opacity: 1; pointer-events: all; }
+    
     @media (max-width: 900px) {
       .mobile-topbar { display: flex; }
       .sidebar { position: fixed; left: 0; top: 0; transform: translateX(-100%); }
       .sidebar.open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.8); }
       .main-area { padding: 24px 16px; height: calc(100vh - 65px); }
-      .anim-in > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 16px !important; }
+      
+      /* THIS RULE FORCES ALL GRIDS TO STACK ON MOBILE */
+      div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 16px !important; }
+      
+      .game-btn-container { flex-direction: column !important; }
       .mobile-close-btn { display: block !important; }
     }
   `;
@@ -226,7 +231,7 @@ const AuthScreen = ({ onLogin }) => {
         const user = { ...form, id: Date.now(), salary: +form.salary, currentEmi: +form.currentEmi || 0, cibil: +form.cibil || 700, age: +form.age || 25 };
         DB.users[form.email] = user;
         
-        // MODIFIED: Redirect back to login explicitly
+        // Redirect back to login explicitly
         setMode("login");
         setStep(1);
         setError("✅ Account created successfully! Please log in.");
@@ -236,7 +241,6 @@ const AuthScreen = ({ onLogin }) => {
 
   const goals = ["Buy a House", "Buy a Car", "Become Debt Free", "Wealth Accumulation", "Start a Business", "Early Retirement"];
 
-  // Dynamic styling for the error/success banner
   const isSuccess = error.includes("✅");
   const bannerColor = isSuccess ? T.primary : T.danger;
   const bannerBg = isSuccess ? T.primaryDim : T.dangerDim;
@@ -285,7 +289,7 @@ const AuthScreen = ({ onLogin }) => {
               <input className="inp" placeholder="Monthly Salary ₹" type="number" value={form.salary} onChange={e => set("salary", e.target.value)}/>
               <input className="inp" placeholder="Current EMIs ₹" type="number" value={form.currentEmi} onChange={e => set("currentEmi", e.target.value)}/>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
               {goals.map(g => <button key={g} className={`chip ${form.goal === g ? "on" : ""}`} onClick={() => set("goal", g)} style={{ fontSize: 11, padding: "7px 8px" }}>{g}</button>)}
             </div>
             <button className="btn-p" onClick={submit} disabled={loading} style={{ width: "100%", marginTop: 4 }}>{loading ? "Creating Profile..." : "Create Account →"}</button>
@@ -351,7 +355,7 @@ const Overview = ({ user }) => {
         <div>
           <p style={{ fontSize: 13, color: T.textSub, marginBottom: 6 }}>Good day,</p>
           <h1 style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.15 }}>{user.name.split(" ")[0]}</h1>
-          <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ color: T.textSub, fontSize: 13 }}>Goal:</span>
             <span className="tag" style={{ background: T.blueDim, color: T.blue }}>{user.goal}</span>
           </div>
@@ -507,7 +511,8 @@ const EMICalc = ({ params, setParams, user }) => {
 
   const pieData = [{ name: "Principal", value: Math.round(p) }, { name: "Interest", value: Math.round(totalInt) }];
 
-  const Slider = ({ label, k, min, max, step, colors, prefix = "", suffix = "" }) => {
+  // FIXED LAG: Function returns JSX directly instead of creating a nested component
+  const renderSlider = ({ label, k, min, max, step, colors, prefix = "", suffix = "" }) => {
     const val = Number(params[k]) || 0;
     const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
 
@@ -517,7 +522,7 @@ const EMICalc = ({ params, setParams, user }) => {
     };
 
     return (
-      <div style={{ marginBottom: 26 }}>
+      <div key={k} style={{ marginBottom: 26 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <span style={{ fontSize: 13, color: T.textSub, fontWeight: 500 }}>{label}</span>
           <div style={{ display: "flex", alignItems: "center", background: "rgba(0,0,0,0.45)", border: `1px solid ${T.border}`, borderRadius: 8, padding: "4px 10px", transition: "border-color 0.2s" }} onFocus={e => e.currentTarget.style.borderColor = T.primary} onBlur={e => e.currentTarget.style.borderColor = T.border}>
@@ -554,12 +559,12 @@ const EMICalc = ({ params, setParams, user }) => {
 
   return (
     <div className="anim-in">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28, flexWrap: "wrap", gap: 14 }}>
         <div>
           <h2 style={{ fontSize: 28, fontWeight: 800 }}>EMI Calculator</h2>
           <p style={{ color: T.textSub, fontSize: 13, marginTop: 4 }}>EMI calculator • Amortization schedule • Prepayment analysis</p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {tabs.map(tb => <button key={tb.id} className={`chip ${activeTab === tb.id ? "on" : ""}`} onClick={() => setActiveTab(tb.id)}>{tb.label}</button>)}
         </div>
       </div>
@@ -567,9 +572,9 @@ const EMICalc = ({ params, setParams, user }) => {
       {activeTab === "basic" && (
         <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 22 }}>
           <div className="panel" style={{ padding: 32 }}>
-            <Slider label="Loan Amount" k="principal" prefix="₹" min={10000} max={5000000} step={10000}/>
-            <Slider label="Interest Rate (p.a.)" k="rate" suffix="%" min={5} max={30} step={0.1} colors={`linear-gradient(to right,${T.primary},${T.gold},${T.danger})`}/>
-            <Slider label="Loan Tenure" k="tenure" suffix="mo" min={3} max={360} step={3}/>
+            {renderSlider({ label: "Loan Amount", k: "principal", prefix: "₹", min: 10000, max: 5000000, step: 10000 })}
+            {renderSlider({ label: "Interest Rate (p.a.)", k: "rate", suffix: "%", min: 5, max: 30, step: 0.1, colors: `linear-gradient(to right,${T.primary},${T.gold},${T.danger})` })}
+            {renderSlider({ label: "Loan Tenure", k: "tenure", suffix: "mo", min: 3, max: 360, step: 3 })}
             <div className="panel-flat" style={{ padding: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                 <span style={{ fontSize: 13, color: T.textSub }}>FOIR after this loan</span>
@@ -886,7 +891,7 @@ const FinancialGame = ({ user }) => {
               <h3 style={{ fontSize: 24, fontWeight: 800 }}>{scenarios[idx].title}</h3>
               <p style={{ color: T.textSub, fontSize: 14, lineHeight: 1.7, marginTop: 10, maxWidth: 480, margin: "10px auto 0" }}>{scenarios[idx].desc}</p>
             </div>
-            <div style={{ display: "flex", gap: 14 }}>
+            <div className="game-btn-container" style={{ display: "flex", gap: 14 }}>
               {scenarios[idx].choices.map((c, i) => (
                 <button key={i} className="game-btn" onClick={() => handle(c)}>
                   <div style={{ fontSize: 26, marginBottom: 8 }}>{c.icon}</div>
@@ -939,12 +944,12 @@ const Markets = ({ user }) => {
 
   return (
     <div className="anim-in">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 26 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 26, flexWrap: "wrap", gap: 14 }}>
         <div>
           <h2 style={{ fontSize: 28, fontWeight: 800 }}>Market Hub</h2>
           <p style={{ color: T.textSub, fontSize: 13, marginTop: 4 }}>Compare lenders · Check eligibility · Find best rates</p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {["All", "Personal", "Home", "Car"].map(t => <button key={t} className={`chip ${filter === t ? "on" : ""}`} onClick={() => { setFilter(t); setSel(null); }}>{t}</button>)}
         </div>
       </div>
@@ -1072,9 +1077,9 @@ Rules:
 
     try {
       // NOTE: Make sure your NEW Gemini API Key goes here!
-      const API_KEY = "AIzaSyBdGkZlmv7PnDg-yCPg0GWTiUk_5D3L0_c"; 
+      const API_KEY = "YOUR_NEW_GEMINI_API_KEY_HERE"; 
       
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1170,7 +1175,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [tab, setTab] = useState("overview");
   const [emiParams, setEmiParams] = useState({ principal: 500000, rate: 10.5, tenure: 60 });
-  const [navOpen, setNavOpen] = useState(false); // Mobile Menu State
+  const [navOpen, setNavOpen] = useState(false); 
 
   useEffect(() => { injectStyles(); }, []);
 
