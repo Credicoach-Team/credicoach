@@ -209,7 +209,7 @@ const HealthRing = ({ score, size = 80 }) => {
 const AuthScreen = ({ onLogin }) => {
   const [mode, setMode] = useState("login");
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ name: "", email: "", password: "", salary: "", currentEmi: "", cibil: "", age: "", goal: "Wealth Accumulation" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", salary: "", numEmis: "", currentEmi: "", cibil: "", age: "", goal: "Wealth Accumulation" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   useEffect(() => { injectStyles(); }, []);
@@ -286,11 +286,19 @@ const AuthScreen = ({ onLogin }) => {
               <input className="inp" placeholder="Age" type="number" value={form.age} onChange={e => set("age", e.target.value)}/>
               <input className="inp" placeholder="CIBIL Score (300–900)" type="number" value={form.cibil} onChange={e => set("cibil", e.target.value)}/>
             </div>
+            
             <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
               <input className="inp" placeholder="Monthly Salary ₹" type="number" value={form.salary} onChange={e => set("salary", e.target.value)}/>
-              <input className="inp" placeholder="Current EMIs" type="number" value={form.currentEmi} onChange={e => set("currentEmi", e.target.value)}/>
+              <input className="inp" placeholder="Number of Active EMIs" type="number" value={form.numEmis} onChange={e => set("numEmis", e.target.value)}/>
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+            
+            {Number(form.numEmis) > 0 && (
+              <div className="anim-in">
+                <input className="inp" placeholder="Total Monthly EMI Amount ₹" type="number" value={form.currentEmi} onChange={e => set("currentEmi", e.target.value)}/>
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 4 }}>
               {goals.map(g => <button key={g} className={`chip ${form.goal === g ? "on" : ""}`} onClick={() => set("goal", g)} style={{ fontSize: 11, padding: "7px 8px" }}>{g}</button>)}
             </div>
             <button className="btn-p" onClick={submit} disabled={loading} style={{ width: "100%", marginTop: 4 }}>{loading ? "Creating Profile..." : "Create Account →"}</button>
@@ -478,11 +486,14 @@ const EMICalc = ({ params, setParams, user }) => {
   const p = Number(params.principal) || 0;
   const r = Number(params.rate) || 0;
   const t = Number(params.tenure) || 1;
+  const cEmi = params.currentEmi !== undefined ? Number(params.currentEmi) : (Number(user.currentEmi) || 0);
 
   const emi = calcEMI(p, r, t);
   const totalPay = emi * t;
   const totalInt = Math.max(0, totalPay - p);
-  const foirAfter = (user.currentEmi + emi) / user.salary;
+  
+  const currentFoir = cEmi / user.salary;
+  const foirAfter = (cEmi + emi) / user.salary;
 
   const amort = useMemo(() => {
     const mr = r / 12 / 100;
@@ -512,8 +523,9 @@ const EMICalc = ({ params, setParams, user }) => {
 
   const pieData = [{ name: "Principal", value: Math.round(p) }, { name: "Interest", value: Math.round(totalInt) }];
 
-  const renderSlider = ({ label, k, min, max, step, colors, prefix = "", suffix = "" }) => {
-    const val = Number(params[k]) || 0;
+  const renderSlider = ({ label, k, min, max, step, colors, prefix = "", suffix = "", fallback }) => {
+    const rawVal = params[k] !== undefined ? params[k] : (fallback !== undefined ? fallback : 0);
+    const val = Number(rawVal) || 0;
     const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
 
     const handleInputChange = (e) => {
@@ -529,12 +541,12 @@ const EMICalc = ({ params, setParams, user }) => {
             {prefix && <span style={{ color: T.textSub, fontSize: 14, marginRight: 6 }}>{prefix}</span>}
             <input
               type="number"
-              value={params[k]}
+              value={rawVal}
               onChange={handleInputChange}
               className="mono"
               style={{
                 background: "transparent", border: "none", outline: "none", color: T.primary,
-                fontSize: 15, fontWeight: 700, width: k === 'principal' ? 85 : 55, textAlign: "right"
+                fontSize: 15, fontWeight: 700, width: (k === 'principal' || k === 'currentEmi') ? 85 : 55, textAlign: "right"
               }}
             />
             {suffix && <span style={{ color: T.textSub, fontSize: 13, marginLeft: 6 }}>{suffix}</span>}
@@ -575,7 +587,17 @@ const EMICalc = ({ params, setParams, user }) => {
             {renderSlider({ label: "Loan Amount", k: "principal", prefix: "₹", min: 10000, max: 5000000, step: 10000 })}
             {renderSlider({ label: "Interest Rate (p.a.)", k: "rate", suffix: "%", min: 5, max: 30, step: 0.1, colors: `linear-gradient(to right,${T.primary},${T.gold},${T.danger})` })}
             {renderSlider({ label: "Loan Tenure", k: "tenure", suffix: "mo", min: 3, max: 360, step: 3 })}
+            {renderSlider({ label: "Existing EMIs", k: "currentEmi", prefix: "₹", min: 0, max: user.salary, step: 500, colors: `linear-gradient(to right,${T.blue},${T.primary})`, fallback: Number(user.currentEmi) || 0 })}
+            
             <div className="panel-flat" style={{ padding: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <span style={{ fontSize: 13, color: T.textSub }}>Current EMI Burden</span>
+                <span className="mono" style={{ fontWeight: 700, color: currentFoir > 0.4 ? T.danger : T.primary, fontSize: 13 }}>{Math.round(currentFoir * 100)}% of income</span>
+              </div>
+              <div style={{ height: 4, borderRadius: 4, background: T.border, marginBottom: 16 }}>
+                <div style={{ width: `${Math.min(currentFoir * 100, 100)}%`, height: "100%", borderRadius: 4, background: currentFoir > 0.4 ? T.danger : T.primary, transition: "width 0.3s" }}/>
+              </div>
+
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                 <span style={{ fontSize: 13, color: T.textSub }}>FOIR after this loan</span>
                 <span className="mono" style={{ fontWeight: 700, color: foirAfter > 0.5 ? T.danger : T.primary, fontSize: 13 }}>{Math.round(foirAfter * 100)}%</span>
@@ -1077,9 +1099,9 @@ Rules:
 
     try {
       // NOTE: Make sure your NEW Gemini API Key goes here!
-      const API_KEY = "YOUR_NEW_GEMINI_API_KEY_HERE"; 
+      const API_KEY = "AIzaSyBdGkZlmv7PnDg-yCPg0GWTiUk_5D3L0_c"; 
       
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
