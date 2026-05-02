@@ -288,7 +288,7 @@ const AuthScreen = ({ onLogin }) => {
             </div>
             <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
               <input className="inp" placeholder="Monthly Salary ₹" type="number" value={form.salary} onChange={e => set("salary", e.target.value)}/>
-              <input className="inp" placeholder="Current EMIs ₹" type="number" value={form.currentEmi} onChange={e => set("currentEmi", e.target.value)}/>
+              <input className="inp" placeholder="Current EMIs" type="number" value={form.currentEmi} onChange={e => set("currentEmi", e.target.value)}/>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
               {goals.map(g => <button key={g} className={`chip ${form.goal === g ? "on" : ""}`} onClick={() => set("goal", g)} style={{ fontSize: 11, padding: "7px 8px" }}>{g}</button>)}
@@ -334,10 +334,10 @@ const Overview = ({ user }) => {
   ];
 
   const cards = [
-    { label: "Monthly Income", val: user.salary, color: T.primary, icon: "💰", note: "Total inflow" },
-    { label: "Active EMIs", val: user.currentEmi, color: T.danger, icon: "📤", note: `${Math.round(foir * 100)}% of income` },
-    { label: "Free Cashflow", val: Math.abs(net), color: net >= 0 ? T.primary : T.danger, icon: net >= 0 ? "📈" : "📉", note: net >= 0 ? "Healthy surplus" : "Deficit!" },
-    { label: "CIBIL Score", val: user.cibil, color: user.cibil >= 750 ? T.primary : user.cibil >= 650 ? T.gold : T.danger, icon: "🏆", note: user.cibil >= 750 ? "Excellent" : user.cibil >= 650 ? "Fair" : "Needs work" },
+    { label: "Monthly Income", val: user.salary, color: T.primary, icon: "💰", prefix: "₹", note: "Total inflow" },
+    { label: "Active EMIs", val: user.currentEmi, color: T.danger, icon: "📤", prefix: "", note: `${Math.round(foir * 100)}% of income` },
+    { label: "Free Cashflow", val: Math.abs(net), color: net >= 0 ? T.primary : T.danger, icon: net >= 0 ? "📈" : "📉", prefix: "₹", note: net >= 0 ? "Healthy surplus" : "Deficit!" },
+    { label: "CIBIL Score", val: user.cibil, color: user.cibil >= 750 ? T.primary : user.cibil >= 650 ? T.gold : T.danger, icon: "🏆", prefix: "", note: user.cibil >= 750 ? "Excellent" : user.cibil >= 650 ? "Fair" : "Needs work" },
   ];
 
   const tips = [
@@ -379,7 +379,7 @@ const Overview = ({ user }) => {
               <span style={{ fontSize: 22 }}>{c.icon}</span>
             </div>
             <div className="mono" style={{ fontSize: 24, fontWeight: 700, color: c.color, marginTop: 14 }}>
-              ₹<Counter to={c.val}/>
+              {c.prefix}<Counter to={c.val}/>
             </div>
             <div style={{ fontSize: 12, color: T.textSub, marginTop: 6 }}>{c.note}</div>
           </div>
@@ -1077,9 +1077,9 @@ Rules:
 
     try {
       // NOTE: Make sure your NEW Gemini API Key goes here!
-      const API_KEY = "AIzaSyBdGkZlmv7PnDg-yCPg0GWTiUk_5D3L0_c"; 
+      const API_KEY = "YOUR_NEW_GEMINI_API_KEY_HERE"; 
       
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
