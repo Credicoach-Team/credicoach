@@ -77,7 +77,6 @@ const injectStyles = () => {
     .range-sl { width:100%; -webkit-appearance:none; height:4px; border-radius:4px; outline:none; cursor:pointer; background:transparent; }
     .range-sl::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#00FF87; box-shadow:0 0 10px rgba(0,255,135,0.5); cursor:pointer; transition:transform 0.15s; }
     .range-sl::-webkit-slider-thumb:hover { transform:scale(1.25); }
-    /* Hide number input arrows */
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
@@ -90,6 +89,21 @@ const injectStyles = () => {
     .anim-up { animation:fadeUp 0.4s ease both; }
     .anim-in { animation:fadeIn 0.35s ease both; }
     .tag { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; letter-spacing:0.3px; text-transform:uppercase; }
+
+    /* Mobile Responsive Additions */
+    .mobile-topbar { display: none; padding: 14px 20px; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.07); background: rgba(3,7,15,0.92); position: sticky; top: 0; z-index: 90; backdrop-filter: blur(24px); }
+    .sidebar { width: 236px; padding: 26px 14px; display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,0.07); background: rgba(3,7,15,0.92); backdrop-filter: blur(24px); height: 100vh; z-index: 100; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex-shrink: 0; }
+    .main-area { flex: 1; padding: 44px 52px; overflow-y: auto; height: 100vh; display: flex; flex-direction: column; }
+    .nav-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 95; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .nav-overlay.show { display: block; opacity: 1; pointer-events: all; }
+    @media (max-width: 900px) {
+      .mobile-topbar { display: flex; }
+      .sidebar { position: fixed; left: 0; top: 0; transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.8); }
+      .main-area { padding: 24px 16px; height: calc(100vh - 65px); }
+      .anim-in > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 16px !important; }
+      .mobile-close-btn { display: block !important; }
+    }
   `;
   document.head.appendChild(s);
 };
@@ -211,12 +225,21 @@ const AuthScreen = ({ onLogin }) => {
         if (!form.salary || !form.cibil || !form.age) return setError("Complete all profile fields.");
         const user = { ...form, id: Date.now(), salary: +form.salary, currentEmi: +form.currentEmi || 0, cibil: +form.cibil || 700, age: +form.age || 25 };
         DB.users[form.email] = user;
-        onLogin(user);
+        
+        // MODIFIED: Redirect back to login explicitly
+        setMode("login");
+        setStep(1);
+        setError("✅ Account created successfully! Please log in.");
       }
     }, 450);
   };
 
   const goals = ["Buy a House", "Buy a Car", "Become Debt Free", "Wealth Accumulation", "Start a Business", "Early Retirement"];
+
+  // Dynamic styling for the error/success banner
+  const isSuccess = error.includes("✅");
+  const bannerColor = isSuccess ? T.primary : T.danger;
+  const bannerBg = isSuccess ? T.primaryDim : T.dangerDim;
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden", background: T.bg }}>
@@ -237,7 +260,7 @@ const AuthScreen = ({ onLogin }) => {
           </div>
         )}
 
-        {error && <div style={{ background: T.dangerDim, border: `1px solid ${T.danger}`, borderRadius: 10, padding: "11px 16px", color: T.danger, marginBottom: 20, fontSize: 13, display: "flex", gap: 8, animation: "shake 0.35s ease" }}>⚠ {error}</div>}
+        {error && <div style={{ background: bannerBg, border: `1px solid ${bannerColor}`, borderRadius: 10, padding: "11px 16px", color: bannerColor, marginBottom: 20, fontSize: 13, display: "flex", gap: 8, animation: "shake 0.35s ease" }}>{isSuccess ? "" : "⚠ "}{error}</div>}
 
         {mode === "login" ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -265,7 +288,7 @@ const AuthScreen = ({ onLogin }) => {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
               {goals.map(g => <button key={g} className={`chip ${form.goal === g ? "on" : ""}`} onClick={() => set("goal", g)} style={{ fontSize: 11, padding: "7px 8px" }}>{g}</button>)}
             </div>
-            <button className="btn-p" onClick={submit} disabled={loading} style={{ width: "100%", marginTop: 4 }}>{loading ? "Creating Profile..." : "Launch Dashboard →"}</button>
+            <button className="btn-p" onClick={submit} disabled={loading} style={{ width: "100%", marginTop: 4 }}>{loading ? "Creating Profile..." : "Create Account →"}</button>
           </div>
         )}
 
@@ -484,7 +507,6 @@ const EMICalc = ({ params, setParams, user }) => {
 
   const pieData = [{ name: "Principal", value: Math.round(p) }, { name: "Interest", value: Math.round(totalInt) }];
 
-  // Updated Interactive Slider with text input
   const Slider = ({ label, k, min, max, step, colors, prefix = "", suffix = "" }) => {
     const val = Number(params[k]) || 0;
     const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
@@ -1008,7 +1030,7 @@ const Markets = ({ user }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AI ADVISOR — Anthropic Powered
+// AI ADVISOR — Gemini Powered
 // ─────────────────────────────────────────────────────────────────────────────
 const AIAdvisor = ({ user }) => {
   const [msgs, setMsgs] = useState([
@@ -1030,8 +1052,6 @@ const AIAdvisor = ({ user }) => {
     setLoading(true);
     setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 60);
 
-    // FIX: We use .slice(1) to remove the AI's initial "Hi!" greeting 
-    // so the array sent to Google correctly starts with the user's first question.
     const geminiMsgs = updated.slice(1).map(m => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }]
@@ -1051,7 +1071,7 @@ Rules:
 - If asked about loans, calculate FOIR impact for them`;
 
     try {
-      // MAKE SURE TO PASTE YOUR *NEW* API KEY HERE
+      // NOTE: Make sure your NEW Gemini API Key goes here!
       const API_KEY = "AIzaSyBdGkZlmv7PnDg-yCPg0GWTiUk_5D3L0_c"; 
       
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
@@ -1106,7 +1126,7 @@ Rules:
     <div className="anim-in" style={{ height: "calc(100vh - 100px)", display: "flex", flexDirection: "column" }}>
       <div style={{ marginBottom: 18 }}>
         <h2 style={{ fontSize: 28, fontWeight: 800 }}>Wealth Manager AI</h2>
-        <p style={{ color: T.textSub, fontSize: 13, marginTop: 4 }}>Powered by Claude · Personalized to your financial profile</p>
+        <p style={{ color: T.textSub, fontSize: 13, marginTop: 4 }}>Powered by Gemini · Personalized to your financial profile</p>
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
         {prompts.map((p, i) => <button key={i} className="chip" style={{ fontSize: 12 }} onClick={() => send(p)}>{p}</button>)}
@@ -1150,6 +1170,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [tab, setTab] = useState("overview");
   const [emiParams, setEmiParams] = useState({ principal: 500000, rate: 10.5, tenure: 60 });
+  const [navOpen, setNavOpen] = useState(false); // Mobile Menu State
 
   useEffect(() => { injectStyles(); }, []);
 
@@ -1164,22 +1185,30 @@ export default function App() {
   ];
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: T.bg }}>
+    <div style={{ display: "flex", height: "100vh", background: T.bg, overflow: "hidden" }}>
+      
+      {/* Mobile Dimmed Overlay */}
+      <div className={`nav-overlay ${navOpen ? "show" : ""}`} onClick={() => setNavOpen(false)} />
+
       {/* Sidebar */}
-      <div style={{ width: 236, padding: "26px 14px", display: "flex", flexDirection: "column", borderRight: `1px solid ${T.border}`, background: "rgba(3,7,15,0.92)", backdropFilter: "blur(24px)", position: "sticky", top: 0, height: "100vh", zIndex: 100 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 8px", marginBottom: 38 }}>
-          <Logo size={30}/>
-          <div>
-            <div style={{ fontFamily: "Syne,sans-serif", fontSize: 17, fontWeight: 800 }}>CrediCoach</div>
-            <div style={{ fontSize: 9, color: T.textSub, letterSpacing: 1.5, textTransform: "uppercase", marginTop: 2 }}>Developed by Divakar</div>
+      <div className={`sidebar ${navOpen ? "open" : ""}`}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 8px", marginBottom: 38 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Logo size={30}/>
+            <div>
+              <div style={{ fontFamily: "Syne,sans-serif", fontSize: 17, fontWeight: 800 }}>CrediCoach</div>
+              <div style={{ fontSize: 9, color: T.textSub, letterSpacing: 1.5, textTransform: "uppercase", marginTop: 2 }}>Developed by Divakar</div>
+            </div>
           </div>
+          {/* Close button inside sidebar on mobile */}
+          <button className="mobile-close-btn" onClick={() => setNavOpen(false)} style={{ background: "none", border: "none", color: T.textSub, fontSize: 24, cursor: "pointer", display: "none" }}>×</button>
         </div>
 
         <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 8px", marginBottom: 10 }}>Navigation</div>
 
         <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
           {nav.map(n => (
-            <div key={n.id} onClick={() => setTab(n.id)} className={`nav-item ${tab === n.id ? "active" : ""}`}>
+            <div key={n.id} onClick={() => { setTab(n.id); setNavOpen(false); }} className={`nav-item ${tab === n.id ? "active" : ""}`}>
               <span style={{ fontSize: 17, width: 22, textAlign: "center" }}>{n.icon}</span>
               <span>{n.label}</span>
               {tab === n.id && <div style={{ marginLeft: "auto", width: 5, height: 5, borderRadius: "50%", background: T.primary, boxShadow: `0 0 6px ${T.primary}` }}/>}
@@ -1207,13 +1236,29 @@ export default function App() {
         </div>
       </div>
 
-      {/* Main */}
-      <div style={{ flex: 1, padding: "44px 52px", overflowY: "auto" }}>
-        {tab === "overview" && <Overview user={user}/>}
-        {tab === "emi" && <EMICalc params={emiParams} setParams={setEmiParams} user={user}/>}
-        {tab === "markets" && <Markets user={user}/>}
-        {tab === "game" && <FinancialGame user={user}/>}
-        {tab === "ai" && <AIAdvisor user={user}/>}
+      {/* Main Layout Area */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        
+        {/* Mobile Top Navigation Bar */}
+        <div className="mobile-topbar">
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Logo size={24}/>
+            <div style={{ fontFamily: "Syne,sans-serif", fontSize: 18, fontWeight: 800 }}>CrediCoach</div>
+          </div>
+          <button onClick={() => setNavOpen(true)} style={{ background: "none", border: "none", color: T.text, fontSize: 24, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 40 }}>
+            ⋮
+          </button>
+        </div>
+
+        {/* Main scrollable content */}
+        <div className="main-area">
+          {tab === "overview" && <Overview user={user}/>}
+          {tab === "emi" && <EMICalc params={emiParams} setParams={setEmiParams} user={user}/>}
+          {tab === "markets" && <Markets user={user}/>}
+          {tab === "game" && <FinancialGame user={user}/>}
+          {tab === "ai" && <AIAdvisor user={user}/>}
+        </div>
+        
       </div>
     </div>
   );
