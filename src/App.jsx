@@ -1073,16 +1073,11 @@ const AIAdvisor = ({ user }) => {
     const msg = (text || input).trim();
     if (!msg || loading) return;
     setInput("");
-    
+
     const updated = [...msgs, { role: "user", content: msg }];
     setMsgs(updated);
     setLoading(true);
     setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 60);
-
-    const geminiMsgs = updated.slice(1).map(m => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }]
-    }));
 
     const systemPrompt = `You are a ruthlessly honest Indian financial advisor in the CrediCoach app.
 Client: ${user.name}, Age ${user.age}, Salary ₹${user.salary}/mo, EMIs ₹${user.currentEmi}/mo, CIBIL ${user.cibil}, Goal: ${user.goal}.
@@ -1098,34 +1093,42 @@ Rules:
 - If asked about loans, calculate FOIR impact for them`;
 
     try {
-      // NOTE: Make sure your NEW Gemini API Key goes here!
-      const API_KEY = import.meta.env.VITE_GROQ_KEY;
-      
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${import.meta.env.VITE_GROQ_KEY}`
-  },
-  body: JSON.stringify({
-    model: "llama3-8b-8192",
-    messages: [
-      { role: "system", content: systemPrompt },
-      ...updated.slice(1).map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content }))
-    ],
-    max_tokens: 800,
-  })
-});
-const data = await res.json();
-const reply = data.choices[0].message.content;
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_GROQ_KEY}`
+        },
+        body: JSON.stringify({
+          model: "llama3-8b-8192",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...updated.slice(1).map(m => ({
+              role: m.role === "assistant" ? "assistant" : "user",
+              content: m.content
+            }))
+          ],
+          max_tokens: 800,
+        })
+      });
 
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Groq API Error:", err);
+        setMsgs([...updated, { role: "assistant", content: `Error: ${err.error?.message || "Something went wrong. Try again."}` }]);
+        setLoading(false);
+        return;
+      }
+
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content || "No response received.";
       setMsgs([...updated, { role: "assistant", content: reply }]);
-      
+
     } catch (e) {
       console.error("Fetch Error:", e);
       setMsgs([...updated, { role: "assistant", content: "Network error. Please try again." }]);
     }
-    
+
     setLoading(false);
     setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   };
@@ -1146,7 +1149,7 @@ const reply = data.choices[0].message.content;
     <div className="anim-in" style={{ height: "calc(100vh - 100px)", display: "flex", flexDirection: "column" }}>
       <div style={{ marginBottom: 18 }}>
         <h2 style={{ fontSize: 28, fontWeight: 800 }}>Wealth Manager AI</h2>
-        <p style={{ color: T.textSub, fontSize: 13, marginTop: 4 }}>Powered by Gemini · Personalized to your financial profile</p>
+        <p style={{ color: T.textSub, fontSize: 13, marginTop: 4 }}>Powered by Groq · Personalized to your financial profile</p>
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
         {prompts.map((p, i) => <button key={i} className="chip" style={{ fontSize: 12 }} onClick={() => send(p)}>{p}</button>)}
