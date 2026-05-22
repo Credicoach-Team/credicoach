@@ -1099,33 +1099,26 @@ Rules:
 
     try {
       // NOTE: Make sure your NEW Gemini API Key goes here!
-      const API_KEY = import.meta.env.VITE_GEMINI_KEY;
+      const API_KEY = import.meta.env.VITE_GROQ_KEY;
       
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemPrompt }]
-          },
-          contents: geminiMsgs,
-          generationConfig: {
-            maxOutputTokens: 800,
-            temperature: 0.7,
-          }
-        })
-      });
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${import.meta.env.VITE_GROQ_KEY}`
+  },
+  body: JSON.stringify({
+    model: "llama3-8b-8192",
+    messages: [
+      { role: "system", content: systemPrompt },
+      ...updated.slice(1).map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content }))
+    ],
+    max_tokens: 800,
+  })
+});
+const data = await res.json();
+const reply = data.choices[0].message.content;
 
-      if (!res.ok) {
-        const err = await res.json();
-        console.error("Gemini API Error:", err);
-        setMsgs([...updated, { role: "assistant", content: `API Error: ${err.error?.message || "Check console"}` }]);
-        setLoading(false);
-        return;
-      }
-
-      const data = await res.json();
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Error processing request.";
       setMsgs([...updated, { role: "assistant", content: reply }]);
       
     } catch (e) {
