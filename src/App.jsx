@@ -1099,7 +1099,7 @@ Rules:
 
     try {
       // NOTE: Make sure your NEW Gemini API Key goes here!
-      const API_KEY = "AIzaSyBdGkZlmv7PnDg-yCPg0GWTiUk_5D3L0_c"; 
+      const API_KEY = import.meta.env.VITE_GEMINI_KEY;
       
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
         method: "POST",
