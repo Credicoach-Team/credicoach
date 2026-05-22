@@ -8,8 +8,7 @@ import Overview from "./pages/Overview";
 import EMICalc from "./pages/EMICalc";
 import SIPCalc from "./pages/SIPCalc";
 import ExpenseTracker from "./pages/ExpenseTracker";
-import Markets from "./pages/Markets";
-import FinancialGame from "./pages/CrediEmpire"; 
+import Markets from "./pages/Markets"; 
 import AIAdvisor from "./pages/AIAdvisor";
 
 export default function App() {

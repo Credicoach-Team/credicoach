@@ -11,7 +11,6 @@ export default function AppShell({ user, setUser, tab, setTab, children }) {
     { id: "sip", icon: "📈", label: "SIP Calculator" },
     { id: "expenses", icon: "💸", label: "Expenses" },
     { id: "markets", icon: "📊", label: "Markets" },
-    { id: "game", icon: "🃏", label: "Game" },
     { id: "ai", icon: "✦", label: "Wealth AI" },
   ];
 
