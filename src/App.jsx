@@ -1100,7 +1100,7 @@ Rules:
           "Authorization": `Bearer ${import.meta.env.VITE_GROQ_KEY}`
         },
         body: JSON.stringify({
-          model: "llama3-8b-8192",
+         model: "llama-3.3-70b-versatile",
           messages: [
             { role: "system", content: systemPrompt },
             ...updated.slice(1).map(m => ({
